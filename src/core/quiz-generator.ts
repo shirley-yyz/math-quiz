@@ -76,6 +76,18 @@ function generateForLevel(
 }
 
 /**
+ * Fisher-Yates 洗牌算法，随机打乱数组
+ */
+function shuffle<T>(arr: T[]): T[] {
+  const result = [...arr];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+/**
  * 根据配置生成口算题目
  * 
  * 功能：
@@ -83,22 +95,17 @@ function generateForLevel(
  * 2. 每份口算题内的重复率不超过10%
  * 3. 根据 copyCount 生成多份，每份独立随机生成
  * 4. 题目不足时在 warnings 中添加警告
- * 5. 题目按难度级别从低到高排序（a到r）
+ * 5. 不同类型的题目随机混合排列
  * 6. 每份的 copyIndex 从1开始
  */
 export function generateQuizzes(config: QuizConfig): GenerationResult {
   const warnings: string[] = [];
   const copies: QuizCopy[] = [];
 
-  // 将 selections 按难度级别从低到高排序
-  const sortedSelections = [...config.selections].sort(
-    (a, b) => levelOrder[a.difficulty] - levelOrder[b.difficulty]
-  );
-
   for (let copyIdx = 0; copyIdx < config.copyCount; copyIdx++) {
     const allQuizzes: Quiz[] = [];
 
-    for (const selection of sortedSelections) {
+    for (const selection of config.selections) {
       const { quizzes, warning } = generateForLevel(
         selection.difficulty,
         selection.count
@@ -106,7 +113,6 @@ export function generateQuizzes(config: QuizConfig): GenerationResult {
       allQuizzes.push(...quizzes);
 
       if (warning) {
-        // 避免重复添加相同的警告（多份生成时同一级别可能多次警告）
         if (!warnings.includes(warning)) {
           warnings.push(warning);
         }
@@ -115,7 +121,7 @@ export function generateQuizzes(config: QuizConfig): GenerationResult {
 
     copies.push({
       copyIndex: copyIdx + 1,
-      quizzes: allQuizzes,
+      quizzes: shuffle(allQuizzes),
     });
   }
 

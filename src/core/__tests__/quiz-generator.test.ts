@@ -41,7 +41,7 @@ describe('generateQuizzes', () => {
     expect(result.copies[0].quizzes).toHaveLength(15);
   });
 
-  it('should sort quizzes by difficulty level (a to r)', () => {
+  it('should randomly shuffle quizzes from different difficulty levels', () => {
     const config = makeConfig([
       { difficulty: 'r', count: 3 },
       { difficulty: 'a', count: 3 },
@@ -50,16 +50,12 @@ describe('generateQuizzes', () => {
     const result = generateQuizzes(config);
     const quizzes = result.copies[0].quizzes;
 
-    // First 3 should be 'a', next 3 'f', last 3 'r'
-    for (let i = 0; i < 3; i++) {
-      expect(quizzes[i].difficulty).toBe('a');
-    }
-    for (let i = 3; i < 6; i++) {
-      expect(quizzes[i].difficulty).toBe('f');
-    }
-    for (let i = 6; i < 9; i++) {
-      expect(quizzes[i].difficulty).toBe('r');
-    }
+    // Should contain all 3 difficulty types
+    const difficulties = new Set(quizzes.map(q => q.difficulty));
+    expect(difficulties).toContain('a');
+    expect(difficulties).toContain('f');
+    expect(difficulties).toContain('r');
+    expect(quizzes).toHaveLength(9);
   });
 
   it('should keep duplicate rate within 10%', () => {
