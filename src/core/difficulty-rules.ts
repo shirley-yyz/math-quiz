@@ -1,5 +1,5 @@
 /**
- * 口算出题系统 - 18个难度级别的验证与生成规则
+ * 口算出题系统 - 26个难度级别的验证与生成规则
  */
 import type { DifficultyLevel, DifficultyRule, Operator, Quiz } from '../types';
 
@@ -28,10 +28,11 @@ function onesDigit(n: number): number {
   return n % 10;
 }
 
-/** 所有难度级别，按 a 到 r 排序 */
+/** 所有难度级别，按 a 到 z 排序 */
 export const ALL_LEVELS: DifficultyLevel[] = [
   'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
   'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
+  's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
 ];
 
 // ============ 级别 a: 10以内加减法 ============
@@ -601,28 +602,215 @@ const ruleR: DifficultyRule = {
   },
 };
 
+// ============ 级别 s: 整十数加整十数 ============
+const ruleS: DifficultyRule = {
+  level: 's',
+  label: '整十数加整十数',
+  operandCount: 2,
+  validate: (quiz: Quiz): boolean => {
+    if (quiz.operands.length !== 2 || quiz.operators.length !== 1) return false;
+    const [a, b] = quiz.operands;
+    if (quiz.operators[0] !== '+') return false;
+    if (a < 10 || a > 90 || a % 10 !== 0) return false;
+    if (b < 10 || b > 90 || b % 10 !== 0) return false;
+    if (a + b > 100) return false;
+    return quiz.answer === a + b;
+  },
+  generate: (): Quiz => {
+    let a: number, b: number;
+    do {
+      a = randomInt(1, 9) * 10;
+      b = randomInt(1, 9) * 10;
+    } while (a + b > 100);
+    return { operands: [a, b], operators: ['+'], answer: a + b, difficulty: 's' };
+  },
+};
+
+// ============ 级别 t: 整十数减整十数 ============
+const ruleT: DifficultyRule = {
+  level: 't',
+  label: '整十数减整十数',
+  operandCount: 2,
+  validate: (quiz: Quiz): boolean => {
+    if (quiz.operands.length !== 2 || quiz.operators.length !== 1) return false;
+    const [a, b] = quiz.operands;
+    if (quiz.operators[0] !== '-') return false;
+    if (a < 20 || a > 90 || a % 10 !== 0) return false;
+    if (b < 10 || b > 80 || b % 10 !== 0) return false;
+    if (a - b < 0) return false;
+    return quiz.answer === a - b;
+  },
+  generate: (): Quiz => {
+    const a = randomInt(2, 9) * 10;
+    const b = randomInt(1, a / 10 - 1) * 10;
+    return { operands: [a, b], operators: ['-'], answer: a - b, difficulty: 't' };
+  },
+};
+
+// ============ 级别 u: 整十数连加 ============
+const ruleU: DifficultyRule = {
+  level: 'u',
+  label: '整十数连加',
+  operandCount: 3,
+  validate: (quiz: Quiz): boolean => {
+    if (quiz.operands.length !== 3 || quiz.operators.length !== 2) return false;
+    if (quiz.operators[0] !== '+' || quiz.operators[1] !== '+') return false;
+    const [a, b, c] = quiz.operands;
+    if (a % 10 !== 0 || b % 10 !== 0 || c % 10 !== 0) return false;
+    if (a < 10 || a > 80 || b < 10 || b > 80 || c < 10 || c > 80) return false;
+    if (a + b + c > 100) return false;
+    return quiz.answer === a + b + c;
+  },
+  generate: (): Quiz => {
+    let a: number, b: number, c: number;
+    do {
+      a = randomInt(1, 8) * 10;
+      b = randomInt(1, 8) * 10;
+      c = randomInt(1, 8) * 10;
+    } while (a + b + c > 100);
+    return { operands: [a, b, c], operators: ['+', '+'], answer: a + b + c, difficulty: 'u' };
+  },
+};
+
+// ============ 级别 v: 整十数连减 ============
+const ruleV: DifficultyRule = {
+  level: 'v',
+  label: '整十数连减',
+  operandCount: 3,
+  validate: (quiz: Quiz): boolean => {
+    if (quiz.operands.length !== 3 || quiz.operators.length !== 2) return false;
+    if (quiz.operators[0] !== '-' || quiz.operators[1] !== '-') return false;
+    const [a, b, c] = quiz.operands;
+    if (a % 10 !== 0 || b % 10 !== 0 || c % 10 !== 0) return false;
+    if (a < 30 || a > 100 || b < 10 || b > 80 || c < 10 || c > 80) return false;
+    if (a - b < 0 || a - b - c < 0) return false;
+    return quiz.answer === a - b - c;
+  },
+  generate: (): Quiz => {
+    let a: number, b: number, c: number;
+    do {
+      a = randomInt(3, 10) * 10;
+      b = randomInt(1, 8) * 10;
+      c = randomInt(1, 8) * 10;
+    } while (a - b < 0 || a - b - c < 0);
+    return { operands: [a, b, c], operators: ['-', '-'], answer: a - b - c, difficulty: 'v' };
+  },
+};
+
+// ============ 级别 w: 整十数加减混合 ============
+const ruleW: DifficultyRule = {
+  level: 'w',
+  label: '整十数加减混合',
+  operandCount: 3,
+  validate: (quiz: Quiz): boolean => {
+    if (quiz.operands.length !== 3 || quiz.operators.length !== 2) return false;
+    const [a, b, c] = quiz.operands;
+    const [op1, op2] = quiz.operators;
+    if (!([op1, op2].includes('+') && [op1, op2].includes('-'))) return false;
+    if (a % 10 !== 0 || b % 10 !== 0 || c % 10 !== 0) return false;
+    if (a < 10 || a > 90 || b < 10 || b > 90 || c < 10 || c > 90) return false;
+    const mid = op1 === '+' ? a + b : a - b;
+    if (mid < 0 || mid > 100) return false;
+    const result = op2 === '+' ? mid + c : mid - c;
+    if (result < 0 || result > 100) return false;
+    return quiz.answer === result;
+  },
+  generate: (): Quiz => {
+    const patterns: [Operator, Operator][] = [['+', '-'], ['-', '+']];
+    const [op1, op2] = patterns[randomInt(0, 1)];
+    let a: number, b: number, c: number;
+    do {
+      a = randomInt(1, 9) * 10;
+      b = randomInt(1, 9) * 10;
+      c = randomInt(1, 9) * 10;
+      const mid = op1 === '+' ? a + b : a - b;
+      if (mid < 0 || mid > 100) continue;
+      const result = op2 === '+' ? mid + c : mid - c;
+      if (result >= 0 && result <= 100) break;
+    } while (true);
+    const mid = op1 === '+' ? a! + b! : a! - b!;
+    const result = op2 === '+' ? mid + c! : mid - c!;
+    return { operands: [a!, b!, c!], operators: [op1, op2], answer: result, difficulty: 'w' };
+  },
+};
+
+// ============ 级别 x: 整十数加一位数 ============
+const ruleX: DifficultyRule = {
+  level: 'x',
+  label: '整十数加一位数',
+  operandCount: 2,
+  validate: (quiz: Quiz): boolean => {
+    if (quiz.operands.length !== 2 || quiz.operators.length !== 1) return false;
+    const [a, b] = quiz.operands;
+    if (quiz.operators[0] !== '+') return false;
+    if (a < 10 || a > 90 || a % 10 !== 0) return false;
+    if (b < 1 || b > 9) return false;
+    return quiz.answer === a + b;
+  },
+  generate: (): Quiz => {
+    const a = randomInt(1, 9) * 10;
+    const b = randomInt(1, 9);
+    return { operands: [a, b], operators: ['+'], answer: a + b, difficulty: 'x' };
+  },
+};
+
+// ============ 级别 y: 整十数减一位数不退位 ============
+const ruleY: DifficultyRule = {
+  level: 'y',
+  label: '整十数减一位数不退位',
+  operandCount: 2,
+  validate: (quiz: Quiz): boolean => {
+    if (quiz.operands.length !== 2 || quiz.operators.length !== 1) return false;
+    const [a, b] = quiz.operands;
+    if (quiz.operators[0] !== '-') return false;
+    if (a < 10 || a > 99) return false;
+    if (b < 1 || b > 9) return false;
+    // 不退位：个位 >= 减数（如 56-4，个位6>=4）
+    if (onesDigit(a) < b) return false;
+    // a 不能是整十数（那是 z 级别的退位场景）
+    if (a % 10 === 0) return false;
+    return quiz.answer === a - b;
+  },
+  generate: (): Quiz => {
+    let a: number, b: number;
+    do {
+      a = randomInt(11, 99);
+      b = randomInt(1, 9);
+    } while (a % 10 === 0 || onesDigit(a) < b);
+    return { operands: [a, b], operators: ['-'], answer: a - b, difficulty: 'y' };
+  },
+};
+
+// ============ 级别 z: 整十数减一位数退位 ============
+const ruleZ: DifficultyRule = {
+  level: 'z',
+  label: '整十数减一位数退位',
+  operandCount: 2,
+  validate: (quiz: Quiz): boolean => {
+    if (quiz.operands.length !== 2 || quiz.operators.length !== 1) return false;
+    const [a, b] = quiz.operands;
+    if (quiz.operators[0] !== '-') return false;
+    // 整十数：如60, 70等
+    if (a < 20 || a > 90 || a % 10 !== 0) return false;
+    if (b < 1 || b > 9) return false;
+    return quiz.answer === a - b;
+  },
+  generate: (): Quiz => {
+    const a = randomInt(2, 9) * 10;
+    const b = randomInt(1, 9);
+    return { operands: [a, b], operators: ['-'], answer: a - b, difficulty: 'z' };
+  },
+};
+
 // ============ 导出 ============
 
 /** 所有难度规则的注册表 */
 export const difficultyRules: Record<DifficultyLevel, DifficultyRule> = {
-  a: ruleA,
-  b: ruleB,
-  c: ruleC,
-  d: ruleD,
-  e: ruleE,
-  f: ruleF,
-  g: ruleG,
-  h: ruleH,
-  i: ruleI,
-  j: ruleJ,
-  k: ruleK,
-  l: ruleL,
-  m: ruleM,
-  n: ruleN,
-  o: ruleO,
-  p: ruleP,
-  q: ruleQ,
-  r: ruleR,
+  a: ruleA, b: ruleB, c: ruleC, d: ruleD, e: ruleE, f: ruleF,
+  g: ruleG, h: ruleH, i: ruleI, j: ruleJ, k: ruleK, l: ruleL,
+  m: ruleM, n: ruleN, o: ruleO, p: ruleP, q: ruleQ, r: ruleR,
+  s: ruleS, t: ruleT, u: ruleU, v: ruleV, w: ruleW, x: ruleX,
+  y: ruleY, z: ruleZ,
 };
 
 /** 导出辅助函数供测试使用 */
