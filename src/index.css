@@ -9,3 +9,25 @@ html, body, #root {
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  html, body, #root {
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  [data-testid="a4-page"] {
+    box-shadow: none !important;
+    page-break-after: always;
+    margin: 0 !important;
+  }
+
+  [data-testid="copy-nav"],
+  [data-testid="warnings"] {
+    display: none !important;
+  }
+}

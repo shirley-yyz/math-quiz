@@ -5,14 +5,16 @@ import ConfigPanel from '../ConfigPanel';
 function setup(overrides: Partial<Parameters<typeof ConfigPanel>[0]> = {}) {
   const onConfigChange = vi.fn();
   const onDownloadPDF = vi.fn();
+  const onPrint = vi.fn();
   const props = {
     onConfigChange,
     onDownloadPDF,
+    onPrint,
     hasQuizzes: false,
     ...overrides,
   };
   const utils = render(<ConfigPanel {...props} />);
-  return { ...utils, onConfigChange, onDownloadPDF };
+  return { ...utils, onConfigChange, onDownloadPDF, onPrint };
 }
 
 describe('ConfigPanel', () => {

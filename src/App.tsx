@@ -11,7 +11,6 @@ function App() {
   const [result, setResult] = useState<GenerationResult | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Cleanup timer on unmount
   useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
@@ -20,14 +19,12 @@ function App() {
 
   const handleConfigChange = useCallback((config: QuizConfig) => {
     if (timerRef.current) clearTimeout(timerRef.current);
-
     timerRef.current = setTimeout(() => {
       if (config.selections.length === 0) {
         setResult(null);
         return;
       }
-      const generated = generateQuizzes(config);
-      setResult(generated);
+      setResult(generateQuizzes(config));
     }, DEBOUNCE_MS);
   }, []);
 
@@ -40,15 +37,22 @@ function App() {
     }
   }, [result]);
 
+  const handlePrint = useCallback(() => {
+    window.print();
+  }, []);
+
   const hasQuizzes = result !== null && result.copies.length > 0 && result.copies[0].quizzes.length > 0;
 
   return (
     <div style={styles.root}>
-      <ConfigPanel
-        onConfigChange={handleConfigChange}
-        onDownloadPDF={handleDownloadPDF}
-        hasQuizzes={hasQuizzes}
-      />
+      <div className="no-print">
+        <ConfigPanel
+          onConfigChange={handleConfigChange}
+          onDownloadPDF={handleDownloadPDF}
+          onPrint={handlePrint}
+          hasQuizzes={hasQuizzes}
+        />
+      </div>
       <PreviewArea result={result} />
     </div>
   );

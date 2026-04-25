@@ -10,7 +10,8 @@ export interface PreviewAreaProps {
 /** A4 dimensions in mm */
 const A4_WIDTH_MM = 210;
 const A4_HEIGHT_MM = 297;
-const MARGIN_MM = 20; // 2cm margins all sides
+const MARGIN_MM = 20; // 2cm margins top/bottom
+const MARGIN_LR_MM = 18; // 1.8cm margins left/right
 const COLUMNS = 4;
 const FONT_SIZE_PT = 12;
 const LINE_HEIGHT_MULT = 3;
@@ -20,8 +21,9 @@ const SCALE = 2.5;
 
 const pageWidthPx = A4_WIDTH_MM * SCALE;
 const pageHeightPx = A4_HEIGHT_MM * SCALE;
-const marginPx = MARGIN_MM * SCALE;
-const contentWidthPx = pageWidthPx - marginPx * 2;
+const marginTBPx = MARGIN_MM * SCALE;
+const marginLRPx = MARGIN_LR_MM * SCALE;
+const contentWidthPx = pageWidthPx - marginLRPx * 2;
 const colWidthPx = contentWidthPx / COLUMNS;
 const fontSizePx = FONT_SIZE_PT * SCALE * 0.352778; // pt to mm to px
 const lineHeightPx = fontSizePx * LINE_HEIGHT_MULT;
@@ -192,10 +194,10 @@ const styles: Record<string, React.CSSProperties> = {
     backgroundColor: '#fff',
     boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
     boxSizing: 'border-box',
-    paddingTop: marginPx,
-    paddingBottom: marginPx,
-    paddingLeft: marginPx,
-    paddingRight: marginPx,
+    paddingTop: marginTBPx,
+    paddingBottom: marginTBPx,
+    paddingLeft: marginLRPx,
+    paddingRight: marginLRPx,
     fontFamily: '"Microsoft YaHei", "微软雅黑", sans-serif',
     fontSize: fontSizePx,
   },

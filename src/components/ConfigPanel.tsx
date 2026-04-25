@@ -6,6 +6,7 @@ import type { QuizConfig, DifficultyLevel } from '../types';
 export interface ConfigPanelProps {
   onConfigChange: (config: QuizConfig) => void;
   onDownloadPDF: () => void;
+  onPrint: () => void;
   hasQuizzes: boolean;
 }
 
@@ -15,7 +16,7 @@ interface LevelState {
   countError: string;  // validation error
 }
 
-export default function ConfigPanel({ onConfigChange, onDownloadPDF, hasQuizzes }: ConfigPanelProps) {
+export default function ConfigPanel({ onConfigChange, onDownloadPDF, onPrint, hasQuizzes }: ConfigPanelProps) {
   const [levels, setLevels] = useState<Record<DifficultyLevel, LevelState>>(() => {
     const init = {} as Record<DifficultyLevel, LevelState>;
     for (const l of ALL_LEVELS) {
@@ -172,6 +173,17 @@ export default function ConfigPanel({ onConfigChange, onDownloadPDF, hasQuizzes 
         >
           下载PDF
         </button>
+        <button
+          onClick={onPrint}
+          disabled={downloadDisabled}
+          style={{
+            ...styles.printBtn,
+            ...(downloadDisabled ? styles.downloadBtnDisabled : {}),
+          }}
+          data-testid="print-btn"
+        >
+          打印预览
+        </button>
         {!anyChecked && (
           <span style={styles.hintText} data-testid="no-selection-hint">
             请先选择难度类型
@@ -255,6 +267,15 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '8px 20px',
     fontSize: 14,
     backgroundColor: '#1976d2',
+    color: '#fff',
+    border: 'none',
+    borderRadius: 4,
+    cursor: 'pointer',
+  },
+  printBtn: {
+    padding: '8px 20px',
+    fontSize: 14,
+    backgroundColor: '#388e3c',
     color: '#fff',
     border: 'none',
     borderRadius: 4,
