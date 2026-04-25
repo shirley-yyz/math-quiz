@@ -6,10 +6,10 @@ import { getPageQuizzes, calculatePages } from './pagination';
 /** A4 page dimensions and layout constants (in mm) */
 const PAGE_WIDTH = 210;
 const MARGIN_TOP = 20;
-const MARGIN_LEFT = 18;
-const MARGIN_RIGHT = 18;
+const MARGIN_LEFT = 15.3;
+const MARGIN_RIGHT = 15.3;
 const FONT_SIZE = 12;
-const LINE_HEIGHT_MULTIPLIER = 3;
+const LINE_HEIGHT_MULTIPLIER = 3.6;
 const COLUMNS = 4;
 
 /** Usable content area width */

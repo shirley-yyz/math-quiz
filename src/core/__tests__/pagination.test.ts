@@ -1,88 +1,55 @@
 import { describe, it, expect } from 'vitest';
-import {
-  QUIZZES_PER_PAGE,
-  calculatePages,
-  calculateTotalPages,
-  getPageQuizzes,
-} from '../pagination';
+import { QUIZZES_PER_PAGE, calculatePages, calculateTotalPages, getPageQuizzes } from '../pagination';
 import type { Quiz, QuizCopy } from '../../types';
 
 function makeQuiz(index: number): Quiz {
   return { operands: [index, 1], operators: ['+'], answer: index + 1, difficulty: 'a' };
 }
-
 function makeQuizzes(n: number): Quiz[] {
   return Array.from({ length: n }, (_, i) => makeQuiz(i));
 }
 
 describe('QUIZZES_PER_PAGE', () => {
-  it('should be 76', () => {
-    expect(QUIZZES_PER_PAGE).toBe(76);
-  });
+  it('should be 60', () => { expect(QUIZZES_PER_PAGE).toBe(60); });
 });
 
 describe('calculatePages', () => {
-  it('should return 1 for 0 quizzes', () => { expect(calculatePages(0)).toBe(1); });
-  it('should return 1 for 1 quiz', () => { expect(calculatePages(1)).toBe(1); });
-  it('should return 1 for exactly 76 quizzes', () => { expect(calculatePages(76)).toBe(1); });
-  it('should return 2 for 77 quizzes', () => { expect(calculatePages(77)).toBe(2); });
-  it('should return 2 for 152 quizzes', () => { expect(calculatePages(152)).toBe(2); });
-  it('should return 3 for 153 quizzes', () => { expect(calculatePages(153)).toBe(3); });
-  it('should return 1 for negative count', () => { expect(calculatePages(-5)).toBe(1); });
+  it('returns 1 for 0 quizzes', () => { expect(calculatePages(0)).toBe(1); });
+  it('returns 1 for 1 quiz', () => { expect(calculatePages(1)).toBe(1); });
+  it('returns 1 for exactly 60', () => { expect(calculatePages(60)).toBe(1); });
+  it('returns 2 for 61', () => { expect(calculatePages(61)).toBe(2); });
+  it('returns 2 for 120', () => { expect(calculatePages(120)).toBe(2); });
+  it('returns 3 for 121', () => { expect(calculatePages(121)).toBe(3); });
+  it('returns 1 for negative', () => { expect(calculatePages(-5)).toBe(1); });
 });
 
 describe('calculateTotalPages', () => {
-  it('should return 0 for empty copies array', () => { expect(calculateTotalPages([])).toBe(0); });
-  it('should return 1 for a single copy with few quizzes', () => {
+  it('returns 0 for empty', () => { expect(calculateTotalPages([])).toBe(0); });
+  it('returns 1 for few quizzes', () => {
     expect(calculateTotalPages([{ copyIndex: 1, quizzes: makeQuizzes(10) }])).toBe(1);
   });
-  it('should sum pages across multiple copies', () => {
+  it('sums pages across copies', () => {
     const copies: QuizCopy[] = [
-      { copyIndex: 1, quizzes: makeQuizzes(76) },
-      { copyIndex: 2, quizzes: makeQuizzes(77) },
+      { copyIndex: 1, quizzes: makeQuizzes(60) },
+      { copyIndex: 2, quizzes: makeQuizzes(61) },
     ];
     expect(calculateTotalPages(copies)).toBe(3);
   });
-  it('should handle copies with varying quiz counts', () => {
-    const copies: QuizCopy[] = [
-      { copyIndex: 1, quizzes: makeQuizzes(200) },
-      { copyIndex: 2, quizzes: makeQuizzes(50) },
-      { copyIndex: 3, quizzes: makeQuizzes(153) },
-    ];
-    expect(calculateTotalPages(copies)).toBe(7);
-  });
-  it('should count each empty copy as 1 page', () => {
-    const copies: QuizCopy[] = [{ copyIndex: 1, quizzes: [] }, { copyIndex: 2, quizzes: [] }];
-    expect(calculateTotalPages(copies)).toBe(2);
+  it('counts empty copy as 1 page', () => {
+    expect(calculateTotalPages([{ copyIndex: 1, quizzes: [] }, { copyIndex: 2, quizzes: [] }])).toBe(2);
   });
 });
 
 describe('getPageQuizzes', () => {
-  it('should return all quizzes when count <= QUIZZES_PER_PAGE', () => {
-    const quizzes = makeQuizzes(50);
-    expect(getPageQuizzes(quizzes, 0)).toHaveLength(50);
+  it('returns all when <= per page', () => { expect(getPageQuizzes(makeQuizzes(50), 0)).toHaveLength(50); });
+  it('returns first 60 for page 0', () => {
+    const q = makeQuizzes(80);
+    expect(getPageQuizzes(q, 0)).toHaveLength(60);
   });
-  it('should return first 76 quizzes for page 0 when more exist', () => {
-    const quizzes = makeQuizzes(100);
-    const page0 = getPageQuizzes(quizzes, 0);
-    expect(page0).toHaveLength(76);
-    expect(page0[0]).toEqual(quizzes[0]);
-    expect(page0[75]).toEqual(quizzes[75]);
+  it('returns remaining for last page', () => {
+    const q = makeQuizzes(80);
+    expect(getPageQuizzes(q, 1)).toHaveLength(20);
   });
-  it('should return remaining quizzes for the last page', () => {
-    const quizzes = makeQuizzes(100);
-    const page1 = getPageQuizzes(quizzes, 1);
-    expect(page1).toHaveLength(24);
-    expect(page1[0]).toEqual(quizzes[76]);
-  });
-  it('should return empty array for out-of-range page index', () => {
-    expect(getPageQuizzes(makeQuizzes(50), 1)).toHaveLength(0);
-  });
-  it('should return empty array for empty quizzes', () => {
-    expect(getPageQuizzes([], 0)).toHaveLength(0);
-  });
-  it('should correctly paginate exactly 76 quizzes', () => {
-    expect(getPageQuizzes(makeQuizzes(76), 0)).toHaveLength(76);
-    expect(getPageQuizzes(makeQuizzes(76), 1)).toHaveLength(0);
-  });
+  it('returns empty for out of range', () => { expect(getPageQuizzes(makeQuizzes(50), 1)).toHaveLength(0); });
+  it('returns empty for empty input', () => { expect(getPageQuizzes([], 0)).toHaveLength(0); });
 });

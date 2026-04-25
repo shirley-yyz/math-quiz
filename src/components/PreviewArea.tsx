@@ -11,10 +11,10 @@ export interface PreviewAreaProps {
 const A4_WIDTH_MM = 210;
 const A4_HEIGHT_MM = 297;
 const MARGIN_MM = 20; // 2cm margins top/bottom
-const MARGIN_LR_MM = 18; // 1.8cm margins left/right
+const MARGIN_LR_MM = 15.3; // 缩小15%
 const COLUMNS = 4;
 const FONT_SIZE_PT = 12;
-const LINE_HEIGHT_MULT = 3;
+const LINE_HEIGHT_MULT = 3.6;
 
 /** Scale factor to fit A4 on screen (px per mm) */
 const SCALE = 2.5;
