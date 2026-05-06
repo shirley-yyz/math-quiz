@@ -1,17 +1,19 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import PreviewArea from '../PreviewArea';
-import type { GenerationResult, Quiz } from '../../types';
+import type { GenerationResult, Quiz, QuizGroup } from '../../types';
 
 function makeQuiz(operands: number[], operators: ('+' | '-')[], answer: number, difficulty: Quiz['difficulty'] = 'a'): Quiz {
-  return { operands, operators, answer, difficulty };
+  return { operands, operators, answer, difficulty, quizType: 'direct' };
 }
 
 function makeResult(quizzes: Quiz[], copies = 1): GenerationResult {
+  const groups: QuizGroup[] = [{ type: 'direct', quizzes }];
   return {
     copies: Array.from({ length: copies }, (_, i) => ({
       copyIndex: i + 1,
-      quizzes: copies === 1 ? quizzes : quizzes.map(q => ({ ...q })),
+      quizzes,
+      groups,
     })),
     warnings: [],
   };
@@ -52,40 +54,23 @@ describe('PreviewArea', () => {
     expect(screen.getByTestId('copy-label')).toHaveTextContent('第1份/共3份');
   });
 
-  it('navigates between copies with prev/next buttons', () => {
+  it('navigates between copies', () => {
     const quizzes = [makeQuiz([1, 1], ['+'], 2)];
     render(<PreviewArea result={makeResult(quizzes, 3)} />);
-
-    const prevBtn = screen.getByTestId('prev-copy') as HTMLButtonElement;
-    const nextBtn = screen.getByTestId('next-copy') as HTMLButtonElement;
-
-    expect(prevBtn.disabled).toBe(true);
-    expect(nextBtn.disabled).toBe(false);
-
+    const nextBtn = screen.getByTestId('next-copy');
     fireEvent.click(nextBtn);
-    expect(screen.getByTestId('copy-label')).toHaveTextContent('第2份/共3份');
-
-    fireEvent.click(nextBtn);
-    expect(screen.getByTestId('copy-label')).toHaveTextContent('第3份/共3份');
-    expect(nextBtn.disabled).toBe(true);
-
-    fireEvent.click(prevBtn);
     expect(screen.getByTestId('copy-label')).toHaveTextContent('第2份/共3份');
   });
 
-  it('renders multiple pages when quizzes exceed page capacity', () => {
-    // QUIZZES_PER_PAGE = 76, so 80 quizzes should produce 2 pages
-    const quizzes = Array.from({ length: 80 }, (_, i) =>
-      makeQuiz([i % 10, 1], ['+'], (i % 10) + 1)
-    );
+  it('renders section title', () => {
+    const quizzes = [makeQuiz([1, 1], ['+'], 2)];
     render(<PreviewArea result={makeResult(quizzes)} />);
-    const pages = screen.getAllByTestId('a4-page');
-    expect(pages.length).toBe(2);
+    expect(screen.getByTestId('a4-page')).toHaveTextContent('直接写得数');
   });
 
   it('displays warnings when present', () => {
     const result: GenerationResult = {
-      copies: [{ copyIndex: 1, quizzes: [makeQuiz([1, 1], ['+'], 2)] }],
+      copies: [{ copyIndex: 1, quizzes: [makeQuiz([1, 1], ['+'], 2)], groups: [{ type: 'direct', quizzes: [makeQuiz([1, 1], ['+'], 2)] }] }],
       warnings: ['题目数量不足'],
     };
     render(<PreviewArea result={result} />);

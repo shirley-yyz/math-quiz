@@ -110,6 +110,7 @@ describe('ConfigPanel', () => {
     expect(onConfigChange).toHaveBeenCalledWith({
       selections: [{ difficulty: 'a', count: 50 }],
       copyCount: 1,
+      quizTypes: ['direct'],
     });
   });
 
@@ -122,6 +123,7 @@ describe('ConfigPanel', () => {
     expect(onConfigChange).toHaveBeenCalledWith({
       selections: [{ difficulty: 'a', count: 100 }],
       copyCount: 1,
+      quizTypes: ['direct'],
     });
   });
 

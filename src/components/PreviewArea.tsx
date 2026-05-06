@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import type { GenerationResult, Quiz } from '../types';
+import type { GenerationResult, Quiz, QuizGroup } from '../types';
+import { QUIZ_TYPE_LABELS } from '../types';
 import { formatQuiz } from '../core/quiz-formatter';
 import { calculatePages, getPageQuizzes } from '../core/pagination';
 
@@ -7,26 +8,24 @@ export interface PreviewAreaProps {
   result: GenerationResult | null;
 }
 
-/** A4 dimensions in mm */
 const A4_WIDTH_MM = 210;
 const A4_HEIGHT_MM = 297;
-const MARGIN_MM = 20; // 2cm margins top/bottom
-const MARGIN_LR_MM = 15.3; // 缩小15%
+const MARGIN_MM = 20;
+const MARGIN_LR_MM = 15.3;
 const COLUMNS = 4;
 const FONT_SIZE_PT = 12;
 const LINE_HEIGHT_MULT = 3.6;
 
-/** Scale factor to fit A4 on screen (px per mm) */
 const SCALE = 2.5;
-
 const pageWidthPx = A4_WIDTH_MM * SCALE;
 const pageHeightPx = A4_HEIGHT_MM * SCALE;
 const marginTBPx = MARGIN_MM * SCALE;
 const marginLRPx = MARGIN_LR_MM * SCALE;
 const contentWidthPx = pageWidthPx - marginLRPx * 2;
 const colWidthPx = contentWidthPx / COLUMNS;
-const fontSizePx = FONT_SIZE_PT * SCALE * 0.352778; // pt to mm to px
+const fontSizePx = FONT_SIZE_PT * SCALE * 0.352778;
 const lineHeightPx = fontSizePx * LINE_HEIGHT_MULT;
+const titleFontSizePx = 14 * SCALE * 0.352778;
 
 export default function PreviewArea({ result }: PreviewAreaProps) {
   const [currentCopy, setCurrentCopy] = useState(0);
@@ -44,16 +43,9 @@ export default function PreviewArea({ result }: PreviewAreaProps) {
   const copies = result.copies;
   const totalCopies = copies.length;
   const copy = copies[Math.min(currentCopy, totalCopies - 1)];
-  const pageCount = calculatePages(copy.quizzes.length);
-
-  const pages: Quiz[][] = [];
-  for (let i = 0; i < pageCount; i++) {
-    pages.push(getPageQuizzes(copy.quizzes, i));
-  }
 
   return (
     <div style={styles.container}>
-      {/* Copy navigation */}
       {totalCopies > 1 && (
         <div style={styles.copyNav} data-testid="copy-nav">
           <button
@@ -78,7 +70,6 @@ export default function PreviewArea({ result }: PreviewAreaProps) {
         </div>
       )}
 
-      {/* Warnings */}
       {result.warnings.length > 0 && (
         <div style={styles.warnings} data-testid="warnings">
           {result.warnings.map((w, i) => (
@@ -87,45 +78,57 @@ export default function PreviewArea({ result }: PreviewAreaProps) {
         </div>
       )}
 
-      {/* A4 pages */}
       <div style={styles.pagesWrapper}>
-        {pages.map((pageQuizzes, pageIdx) => (
-          <A4Page key={pageIdx} quizzes={pageQuizzes} />
-        ))}
+        <A4PageWithGroups groups={copy.groups} />
       </div>
     </div>
   );
 }
 
+/** Render all groups within A4 pages */
+function A4PageWithGroups({ groups }: { groups: QuizGroup[] }) {
+  return (
+    <div style={styles.a4Page} data-testid="a4-page">
+      <div style={styles.pageHeader}>
+        <span>姓名：______</span>
+        <span>用时：______</span>
+      </div>
 
-/** Single A4 page rendering */
-function A4Page({ quizzes }: { quizzes: Quiz[] }) {
-  // Arrange quizzes into rows of 4
+      {groups.map((group, idx) => (
+        <div key={idx}>
+          {/* Section title */}
+          <div style={{
+            ...styles.sectionTitle,
+            marginTop: idx === 0 ? 0 : lineHeightPx * 2,
+          }}>
+            {QUIZ_TYPE_LABELS[group.type]}
+          </div>
+
+          {/* Quiz grid */}
+          <QuizGrid quizzes={group.quizzes} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function QuizGrid({ quizzes }: { quizzes: Quiz[] }) {
   const rows: Quiz[][] = [];
   for (let i = 0; i < quizzes.length; i += COLUMNS) {
     rows.push(quizzes.slice(i, i + COLUMNS));
   }
 
   return (
-    <div style={styles.a4Page} data-testid="a4-page">
-      {/* Header */}
-      <div style={styles.pageHeader}>
-        <span>姓名：______</span>
-        <span>用时：______</span>
-      </div>
-
-      {/* Quiz grid */}
-      <div style={styles.quizGrid}>
-        {rows.map((row, rowIdx) => (
-          <div key={rowIdx} style={styles.quizRow}>
-            {row.map((quiz, colIdx) => (
-              <div key={colIdx} style={styles.quizCell}>
-                {formatQuiz(quiz)}
-              </div>
-            ))}
-          </div>
-        ))}
-      </div>
+    <div style={styles.quizGrid}>
+      {rows.map((row, rowIdx) => (
+        <div key={rowIdx} style={styles.quizRow}>
+          {row.map((quiz, colIdx) => (
+            <div key={colIdx} style={styles.quizCell}>
+              {formatQuiz(quiz)}
+            </div>
+          ))}
+        </div>
+      ))}
     </div>
   );
 }
@@ -161,19 +164,9 @@ const styles: Record<string, React.CSSProperties> = {
     boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
     marginBottom: 16,
   },
-  navBtn: {
-    padding: '4px 12px',
-    fontSize: 13,
-    cursor: 'pointer',
-  },
-  copyLabel: {
-    fontSize: 14,
-    fontWeight: 500,
-  },
-  warnings: {
-    width: pageWidthPx,
-    marginBottom: 12,
-  },
+  navBtn: { padding: '4px 12px', fontSize: 13, cursor: 'pointer' },
+  copyLabel: { fontSize: 14, fontWeight: 500 },
+  warnings: { width: pageWidthPx, marginBottom: 12 },
   warningItem: {
     padding: '6px 10px',
     backgroundColor: '#fff3e0',
@@ -207,17 +200,16 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: lineHeightPx,
     fontSize: fontSizePx,
   },
-  quizGrid: {
-    display: 'flex',
-    flexDirection: 'column',
+  sectionTitle: {
+    fontSize: titleFontSizePx,
+    fontWeight: 'bold',
+    marginBottom: lineHeightPx * 0.5,
   },
+  quizGrid: { display: 'flex', flexDirection: 'column' },
   quizRow: {
     display: 'flex',
     lineHeight: `${lineHeightPx}px`,
     height: lineHeightPx,
   },
-  quizCell: {
-    width: colWidthPx,
-    whiteSpace: 'nowrap',
-  },
+  quizCell: { width: colWidthPx, whiteSpace: 'nowrap' },
 };

@@ -1,10 +1,10 @@
 /**
  * 口算出题系统 - 题目生成器主函数
  */
-import type { Quiz, QuizConfig, QuizCopy, GenerationResult, DifficultyLevel } from '../types';
-import { difficultyRules, ALL_LEVELS } from './difficulty-rules';
+import type { Quiz, QuizConfig, QuizCopy, QuizGroup, GenerationResult, DifficultyLevel, QuizType } from '../types';
+import { difficultyRules } from './difficulty-rules';
 
-/** 将题目格式化为用于去重比较的字符串，如 "3+5" 或 "12-3+4" */
+/** 将题目格式化为用于去重比较的字符串 */
 function quizToKey(quiz: Quiz): string {
   let key = String(quiz.operands[0]);
   for (let i = 0; i < quiz.operators.length; i++) {
@@ -13,19 +13,8 @@ function quizToKey(quiz: Quiz): string {
   return key;
 }
 
-/** 难度级别排序索引 */
-const levelOrder: Record<DifficultyLevel, number> = {} as Record<DifficultyLevel, number>;
-ALL_LEVELS.forEach((level, index) => {
-  levelOrder[level] = index;
-});
-
-/** 最大重试次数，超过后停止生成该级别的新题目 */
 const MAX_RETRIES = 100;
 
-/**
- * 为单个难度级别生成指定数量的题目，带去重控制
- * @returns 生成的题目数组和可能的警告信息
- */
 function generateForLevel(
   level: DifficultyLevel,
   count: number,
@@ -44,28 +33,22 @@ function generateForLevel(
     while (retries < MAX_RETRIES) {
       const quiz = rule.generate();
       const key = quizToKey(quiz);
-
       if (!seen.has(key)) {
-        // 新题目，直接加入
         seen.add(key);
         quizzes.push(quiz);
         generated = true;
         break;
       } else {
-        // 重复题目，检查是否还有重复配额
         retries++;
       }
     }
 
     if (!generated) {
-      // 重试次数用尽，检查是否可以接受重复
       if (duplicateCount < maxDuplicates) {
-        // 还有重复配额，生成一道（可能重复的）题目
         const quiz = rule.generate();
         quizzes.push(quiz);
         duplicateCount++;
       } else {
-        // 重复配额也用完了，无法继续生成
         const warning = `难度级别 ${level}（${rule.label}）：请求生成 ${count} 道题目，实际只能生成 ${quizzes.length} 道不重复题目`;
         return { quizzes, warning };
       }
@@ -75,9 +58,6 @@ function generateForLevel(
   return { quizzes };
 }
 
-/**
- * Fisher-Yates 洗牌算法，随机打乱数组
- */
 function shuffle<T>(arr: T[]): T[] {
   const result = [...arr];
   for (let i = result.length - 1; i > 0; i--) {
@@ -88,40 +68,61 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 /**
- * 根据配置生成口算题目
- * 
- * 功能：
- * 1. 按配置遍历每个难度级别，生成指定数量的题目
- * 2. 每份口算题内的重复率不超过10%
- * 3. 根据 copyCount 生成多份，每份独立随机生成
- * 4. 题目不足时在 warnings 中添加警告
- * 5. 不同类型的题目随机混合排列
- * 6. 每份的 copyIndex 从1开始
+ * 为填空题随机选择一个操作数位置作为空白
+ */
+function assignBlankPosition(quiz: Quiz): number {
+  // 随机选一个操作数位置（不选结果位置）
+  return Math.floor(Math.random() * quiz.operands.length);
+}
+
+/**
+ * 根据配置生成口算题目，支持多题型
  */
 export function generateQuizzes(config: QuizConfig): GenerationResult {
   const warnings: string[] = [];
   const copies: QuizCopy[] = [];
+  const quizTypes = config.quizTypes && config.quizTypes.length > 0
+    ? config.quizTypes
+    : ['direct' as QuizType];
 
   for (let copyIdx = 0; copyIdx < config.copyCount; copyIdx++) {
+    const groups: QuizGroup[] = [];
     const allQuizzes: Quiz[] = [];
 
-    for (const selection of config.selections) {
-      const { quizzes, warning } = generateForLevel(
-        selection.difficulty,
-        selection.count
-      );
-      allQuizzes.push(...quizzes);
+    for (const quizType of quizTypes) {
+      const typeQuizzes: Quiz[] = [];
 
-      if (warning) {
-        if (!warnings.includes(warning)) {
+      for (const selection of config.selections) {
+        const { quizzes, warning } = generateForLevel(
+          selection.difficulty,
+          selection.count
+        );
+
+        // 为每道题设置题型
+        const typedQuizzes = quizzes.map(q => {
+          const typed: Quiz = { ...q, quizType };
+          if (quizType === 'fillBlank') {
+            typed.blankPosition = assignBlankPosition(q);
+          }
+          return typed;
+        });
+
+        typeQuizzes.push(...typedQuizzes);
+
+        if (warning && !warnings.includes(warning)) {
           warnings.push(warning);
         }
       }
+
+      const shuffled = shuffle(typeQuizzes);
+      groups.push({ type: quizType, quizzes: shuffled });
+      allQuizzes.push(...shuffled);
     }
 
     copies.push({
       copyIndex: copyIdx + 1,
-      quizzes: shuffle(allQuizzes),
+      quizzes: allQuizzes,
+      groups,
     });
   }
 

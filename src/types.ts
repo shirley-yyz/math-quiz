@@ -13,12 +13,24 @@ export type DifficultyLevel =
 /** 运算符 */
 export type Operator = '+' | '-';
 
+/** 题型 */
+export type QuizType = 'direct' | 'fillBlank' | 'vertical';
+
+/** 题型标签 */
+export const QUIZ_TYPE_LABELS: Record<QuizType, string> = {
+  direct: '一、直接写得数',
+  fillBlank: '二、口算填空题',
+  vertical: '三、竖式填空题',
+};
+
 /** 单道题目 */
 export interface Quiz {
   operands: number[];       // 操作数列表，2个或3个
   operators: Operator[];    // 运算符列表，1个或2个
   answer: number;           // 正确答案
   difficulty: DifficultyLevel;
+  quizType: QuizType;       // 题型
+  blankPosition?: number;   // 填空位置（0=第一个操作数，1=第二个操作数，2=第三个操作数，-1=结果）
 }
 
 /** 用户配置 */
@@ -28,12 +40,20 @@ export interface QuizConfig {
     count: number;           // 1-200
   }[];
   copyCount: number;         // 1-10
+  quizTypes: QuizType[];     // 选择的题型
+}
+
+/** 按题型分组的题目 */
+export interface QuizGroup {
+  type: QuizType;
+  quizzes: Quiz[];
 }
 
 /** 单份口算题集合 */
 export interface QuizCopy {
   copyIndex: number;         // 份数编号，从1开始
-  quizzes: Quiz[];           // 该份所有题目
+  quizzes: Quiz[];           // 该份所有题目（保留兼容）
+  groups: QuizGroup[];       // 按题型分组
 }
 
 /** 生成结果 */

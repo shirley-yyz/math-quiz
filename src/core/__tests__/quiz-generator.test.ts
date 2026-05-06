@@ -7,7 +7,7 @@ function makeConfig(
   selections: { difficulty: DifficultyLevel; count: number }[],
   copyCount = 1
 ): QuizConfig {
-  return { selections, copyCount };
+  return { selections, copyCount, quizTypes: ['direct'] };
 }
 
 /** Helper: quiz to key string for dedup checking */

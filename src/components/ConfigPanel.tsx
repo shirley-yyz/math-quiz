@@ -1,7 +1,10 @@
 import { useState, useCallback } from 'react';
 import { ALL_LEVELS, difficultyRules } from '../core/difficulty-rules';
 import { validateQuizCount, validateCopyCount } from '../core/validation';
-import type { QuizConfig, DifficultyLevel } from '../types';
+import type { QuizConfig, DifficultyLevel, QuizType } from '../types';
+import { QUIZ_TYPE_LABELS } from '../types';
+
+const ALL_QUIZ_TYPES: QuizType[] = ['direct', 'fillBlank', 'vertical'];
 
 export interface ConfigPanelProps {
   onConfigChange: (config: QuizConfig) => void;
@@ -27,9 +30,10 @@ export default function ConfigPanel({ onConfigChange, onDownloadPDF, onPrint, ha
 
   const [copyCountStr, setCopyCountStr] = useState('1');
   const [copyCountError, setCopyCountError] = useState('');
+  const [selectedTypes, setSelectedTypes] = useState<QuizType[]>(['direct']);
 
   const buildAndNotify = useCallback(
-    (nextLevels: Record<DifficultyLevel, LevelState>, nextCopyStr: string) => {
+    (nextLevels: Record<DifficultyLevel, LevelState>, nextCopyStr: string, types?: QuizType[]) => {
       const copyVal = Number(nextCopyStr);
       const copyResult = validateCopyCount(copyVal);
 
@@ -50,9 +54,9 @@ export default function ConfigPanel({ onConfigChange, onDownloadPDF, onPrint, ha
 
       if (hasValidationError || !copyResult.valid) return;
 
-      onConfigChange({ selections, copyCount: copyVal });
+      onConfigChange({ selections, copyCount: copyVal, quizTypes: types || selectedTypes });
     },
-    [onConfigChange],
+    [onConfigChange, selectedTypes],
   );
 
   const handleCheckToggle = (level: DifficultyLevel) => {
@@ -139,6 +143,30 @@ export default function ConfigPanel({ onConfigChange, onDownloadPDF, onPrint, ha
             </div>
           );
         })}
+      </div>
+
+      <div style={styles.typeSection}>
+        <span style={styles.typeSectionLabel}>题型选择：</span>
+        {ALL_QUIZ_TYPES.map((type) => (
+          <label key={type} style={styles.typeCheckLabel}>
+            <input
+              type="checkbox"
+              checked={selectedTypes.includes(type)}
+              onChange={() => {
+                setSelectedTypes((prev) => {
+                  const next = prev.includes(type)
+                    ? prev.filter(t => t !== type)
+                    : [...prev, type];
+                  const result = next.length > 0 ? next : ['direct' as QuizType];
+                  buildAndNotify(levels, copyCountStr, result);
+                  return result;
+                });
+              }}
+              data-testid={`type-${type}`}
+            />
+            <span style={styles.levelText}>{QUIZ_TYPE_LABELS[type].replace(/^[一二三]、/, '')}</span>
+          </label>
+        ))}
       </div>
 
       <div style={styles.copySection}>
@@ -245,6 +273,24 @@ const styles: Record<string, React.CSSProperties> = {
   errorText: {
     color: 'red',
     fontSize: 11,
+  },
+  typeSection: {
+    marginBottom: 12,
+    paddingTop: 8,
+    borderTop: '1px solid #e0e0e0',
+  },
+  typeSectionLabel: {
+    fontSize: 13,
+    fontWeight: 500,
+    display: 'block',
+    marginBottom: 4,
+  },
+  typeCheckLabel: {
+    display: 'flex',
+    alignItems: 'center',
+    cursor: 'pointer',
+    gap: 4,
+    marginBottom: 2,
   },
   copySection: {
     marginBottom: 12,
