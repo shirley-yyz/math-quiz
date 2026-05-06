@@ -78,7 +78,7 @@ export default function PreviewArea({ result }: PreviewAreaProps) {
       )}
 
       <div style={styles.pagesWrapper}>
-        <A4PageWithGroups groups={copy.groups} />
+        <A4PageWithGroups groups={copy.groups || [{ type: 'direct', quizzes: copy.quizzes }]} />
       </div>
     </div>
   );
