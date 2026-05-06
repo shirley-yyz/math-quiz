@@ -101,7 +101,7 @@ export function generateQuizzes(config: QuizConfig): GenerationResult {
         // 为每道题设置题型
         const typedQuizzes = quizzes.map(q => {
           const typed: Quiz = { ...q, quizType };
-          if (quizType === 'fillBlank') {
+          if (quizType === 'fillBlank' || quizType === 'vertical') {
             typed.blankPosition = assignBlankPosition(q);
           }
           return typed;

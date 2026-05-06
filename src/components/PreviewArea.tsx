@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import type { GenerationResult, Quiz, QuizGroup } from '../types';
-import { QUIZ_TYPE_LABELS } from '../types';
+import { QUIZ_TYPE_LABELS, CHINESE_NUMBERS } from '../types';
 import { formatQuiz } from '../core/quiz-formatter';
-import { calculatePages, getPageQuizzes } from '../core/pagination';
 
 export interface PreviewAreaProps {
   result: GenerationResult | null;
@@ -14,7 +13,7 @@ const MARGIN_MM = 20;
 const MARGIN_LR_MM = 15.3;
 const COLUMNS = 4;
 const FONT_SIZE_PT = 12;
-const LINE_HEIGHT_MULT = 3.6;
+const LINE_HEIGHT_MULT = 3;
 
 const SCALE = 2.5;
 const pageWidthPx = A4_WIDTH_MM * SCALE;
@@ -96,16 +95,20 @@ function A4PageWithGroups({ groups }: { groups: QuizGroup[] }) {
 
       {groups.map((group, idx) => (
         <div key={idx}>
-          {/* Section title */}
+          {/* Section title with dynamic numbering */}
           <div style={{
             ...styles.sectionTitle,
-            marginTop: idx === 0 ? 0 : lineHeightPx * 2,
+            marginTop: idx === 0 ? 0 : lineHeightPx * 1,
           }}>
-            {QUIZ_TYPE_LABELS[group.type]}
+            {CHINESE_NUMBERS[idx]}、{QUIZ_TYPE_LABELS[group.type]}
           </div>
 
           {/* Quiz grid */}
-          <QuizGrid quizzes={group.quizzes} />
+          {group.type === 'vertical' ? (
+            <VerticalQuizGrid quizzes={group.quizzes} />
+          ) : (
+            <QuizGrid quizzes={group.quizzes} />
+          )}
         </div>
       ))}
     </div>
@@ -129,6 +132,58 @@ function QuizGrid({ quizzes }: { quizzes: Quiz[] }) {
           ))}
         </div>
       ))}
+    </div>
+  );
+}
+
+/** 竖式填空题：每道题竖式排列，每行放4道 */
+const VERTICAL_COLUMNS = 4;
+
+function VerticalQuizGrid({ quizzes }: { quizzes: Quiz[] }) {
+  const rows: Quiz[][] = [];
+  for (let i = 0; i < quizzes.length; i += VERTICAL_COLUMNS) {
+    rows.push(quizzes.slice(i, i + VERTICAL_COLUMNS));
+  }
+
+  return (
+    <div style={styles.quizGrid}>
+      {rows.map((row, rowIdx) => (
+        <div key={rowIdx} style={styles.verticalRow}>
+          {row.map((quiz, colIdx) => (
+            <VerticalQuizCell key={colIdx} quiz={quiz} />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** 单道竖式题渲染：上面横式等式 + 下面竖式 */
+function VerticalQuizCell({ quiz }: { quiz: Quiz }) {
+  const [a, b] = quiz.operands;
+  const op = quiz.operators[0] || '+';
+  const result = quiz.answer;
+  const blankPos = quiz.blankPosition ?? -1;
+
+  // 横式部分（用□代替空白）
+  const displayAH = blankPos === 0 ? '□' : String(a);
+  const displayBH = blankPos === 1 ? '□' : String(b);
+  const horizontal = `${displayAH} ${op} ${displayBH} = ${result}`;
+
+  // 竖式部分
+  const maxDigits = Math.max(String(a).length, String(b).length, String(result).length);
+  const displayAV = blankPos === 0 ? '□'.padStart(maxDigits) : String(a).padStart(maxDigits);
+  const displayBV = blankPos === 1 ? '□'.padStart(maxDigits) : String(b).padStart(maxDigits);
+  const displayResultV = String(result).padStart(maxDigits);
+  const line = '—'.repeat(maxDigits + 2);
+
+  return (
+    <div style={styles.verticalCell}>
+      <div style={styles.verticalHorizontal}>{horizontal}</div>
+      <div style={styles.verticalLine}><span style={styles.verticalOp}>&nbsp;&nbsp;</span>{displayAV}</div>
+      <div style={styles.verticalLine}><span style={styles.verticalOp}>{op} </span>{displayBV}</div>
+      <div style={styles.verticalDivider}>{line}</div>
+      <div style={styles.verticalLine}><span style={styles.verticalOp}>&nbsp;&nbsp;</span>{displayResultV}</div>
     </div>
   );
 }
@@ -203,7 +258,7 @@ const styles: Record<string, React.CSSProperties> = {
   sectionTitle: {
     fontSize: titleFontSizePx,
     fontWeight: 'bold',
-    marginBottom: lineHeightPx * 0.5,
+    marginBottom: lineHeightPx * 0.2,
   },
   quizGrid: { display: 'flex', flexDirection: 'column' },
   quizRow: {
@@ -212,4 +267,33 @@ const styles: Record<string, React.CSSProperties> = {
     height: lineHeightPx,
   },
   quizCell: { width: colWidthPx, whiteSpace: 'nowrap' },
+  verticalRow: {
+    display: 'flex',
+    marginBottom: lineHeightPx * 0.5,
+  },
+  verticalCell: {
+    width: contentWidthPx / COLUMNS,
+    fontFamily: 'monospace, "Microsoft YaHei", "微软雅黑"',
+    fontSize: fontSizePx,
+    lineHeight: 1.4,
+    marginBottom: lineHeightPx * 0.3,
+  },
+  verticalHorizontal: {
+    marginBottom: 4,
+    fontFamily: '"Microsoft YaHei", "微软雅黑", sans-serif',
+    textAlign: 'left',
+  },
+  verticalLine: {
+    whiteSpace: 'pre',
+    textAlign: 'left' as const,
+  },
+  verticalOp: {
+    display: 'inline-block',
+    width: '1.2em',
+    textAlign: 'left' as const,
+  },
+  verticalDivider: {
+    whiteSpace: 'pre',
+    textAlign: 'left' as const,
+  },
 };

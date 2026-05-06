@@ -164,7 +164,7 @@ export default function ConfigPanel({ onConfigChange, onDownloadPDF, onPrint, ha
               }}
               data-testid={`type-${type}`}
             />
-            <span style={styles.levelText}>{QUIZ_TYPE_LABELS[type].replace(/^[一二三]、/, '')}</span>
+            <span style={styles.levelText}>{QUIZ_TYPE_LABELS[type]}</span>
           </label>
         ))}
       </div>

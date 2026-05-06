@@ -9,7 +9,7 @@ const MARGIN_TOP = 20;
 const MARGIN_LEFT = 15.3;
 const MARGIN_RIGHT = 15.3;
 const FONT_SIZE = 12;
-const LINE_HEIGHT_MULTIPLIER = 3.6;
+const LINE_HEIGHT_MULTIPLIER = 3;
 const COLUMNS = 4;
 
 /** Usable content area width */

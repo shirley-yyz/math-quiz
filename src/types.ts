@@ -16,12 +16,15 @@ export type Operator = '+' | '-';
 /** 题型 */
 export type QuizType = 'direct' | 'fillBlank' | 'vertical';
 
-/** 题型标签 */
+/** 题型标签（不含编号） */
 export const QUIZ_TYPE_LABELS: Record<QuizType, string> = {
-  direct: '一、直接写得数',
-  fillBlank: '二、口算填空题',
-  vertical: '三、竖式填空题',
+  direct: '直接写得数',
+  fillBlank: '口算填空题',
+  vertical: '竖式填空题',
 };
+
+/** 中文数字编号 */
+export const CHINESE_NUMBERS = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
 
 /** 单道题目 */
 export interface Quiz {
