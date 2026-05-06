@@ -28,11 +28,11 @@ function onesDigit(n: number): number {
   return n % 10;
 }
 
-/** 所有难度级别，按 a 到 z 排序 */
+/** 所有难度级别，按 a 到 x 排序 */
 export const ALL_LEVELS: DifficultyLevel[] = [
   'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
   'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
-  's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+  's', 't', 'u', 'v', 'w', 'x',
 ];
 
 // ============ 级别 a: 10以内加减法 ============
@@ -754,54 +754,6 @@ const ruleX: DifficultyRule = {
   },
 };
 
-// ============ 级别 y: 整十数减一位数不退位 ============
-const ruleY: DifficultyRule = {
-  level: 'y',
-  label: '整十数减一位数不退位',
-  operandCount: 2,
-  validate: (quiz: Quiz): boolean => {
-    if (quiz.operands.length !== 2 || quiz.operators.length !== 1) return false;
-    const [a, b] = quiz.operands;
-    if (quiz.operators[0] !== '-') return false;
-    if (a < 10 || a > 99) return false;
-    if (b < 1 || b > 9) return false;
-    // 不退位：个位 >= 减数（如 56-4，个位6>=4）
-    if (onesDigit(a) < b) return false;
-    // a 不能是整十数（那是 z 级别的退位场景）
-    if (a % 10 === 0) return false;
-    return quiz.answer === a - b;
-  },
-  generate: (): Quiz => {
-    let a: number, b: number;
-    do {
-      a = randomInt(11, 99);
-      b = randomInt(1, 9);
-    } while (a % 10 === 0 || onesDigit(a) < b);
-    return { operands: [a, b], operators: ['-'], answer: a - b, difficulty: 'y' };
-  },
-};
-
-// ============ 级别 z: 整十数减一位数退位 ============
-const ruleZ: DifficultyRule = {
-  level: 'z',
-  label: '整十数减一位数退位',
-  operandCount: 2,
-  validate: (quiz: Quiz): boolean => {
-    if (quiz.operands.length !== 2 || quiz.operators.length !== 1) return false;
-    const [a, b] = quiz.operands;
-    if (quiz.operators[0] !== '-') return false;
-    // 整十数：如60, 70等
-    if (a < 20 || a > 90 || a % 10 !== 0) return false;
-    if (b < 1 || b > 9) return false;
-    return quiz.answer === a - b;
-  },
-  generate: (): Quiz => {
-    const a = randomInt(2, 9) * 10;
-    const b = randomInt(1, 9);
-    return { operands: [a, b], operators: ['-'], answer: a - b, difficulty: 'z' };
-  },
-};
-
 // ============ 导出 ============
 
 /** 所有难度规则的注册表 */
@@ -810,7 +762,6 @@ export const difficultyRules: Record<DifficultyLevel, DifficultyRule> = {
   g: ruleG, h: ruleH, i: ruleI, j: ruleJ, k: ruleK, l: ruleL,
   m: ruleM, n: ruleN, o: ruleO, p: ruleP, q: ruleQ, r: ruleR,
   s: ruleS, t: ruleT, u: ruleU, v: ruleV, w: ruleW, x: ruleX,
-  y: ruleY, z: ruleZ,
 };
 
 /** 导出辅助函数供测试使用 */
