@@ -1,8 +1,9 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import ConfigPanel from './components/ConfigPanel';
+import ConfigPanel, { type DownloadFormat } from './components/ConfigPanel';
 import PreviewArea from './components/PreviewArea';
 import { generateQuizzes } from './core/quiz-generator';
 import { generatePDF } from './core/pdf-generator';
+import { generateWord } from './core/word-generator';
 import type { QuizConfig, GenerationResult } from './types';
 
 const DEBOUNCE_MS = 500;
@@ -28,12 +29,17 @@ function App() {
     }, DEBOUNCE_MS);
   }, []);
 
-  const handleDownloadPDF = useCallback(() => {
+  const handleDownload = useCallback(async (format: DownloadFormat) => {
     if (!result) return;
     try {
-      generatePDF(result);
-    } catch {
-      alert('PDF生成失败，请重试');
+      if (format === 'pdf') {
+        generatePDF(result);
+      } else {
+        await generateWord(result);
+      }
+    } catch (e) {
+      console.error(e);
+      alert(`${format === 'pdf' ? 'PDF' : 'Word'}生成失败，请重试`);
     }
   }, [result]);
 
@@ -48,7 +54,7 @@ function App() {
       <div className="no-print">
         <ConfigPanel
           onConfigChange={handleConfigChange}
-          onDownloadPDF={handleDownloadPDF}
+          onDownload={handleDownload}
           onPrint={handlePrint}
           hasQuizzes={hasQuizzes}
         />

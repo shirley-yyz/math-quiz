@@ -4,17 +4,17 @@ import ConfigPanel from '../ConfigPanel';
 
 function setup(overrides: Partial<Parameters<typeof ConfigPanel>[0]> = {}) {
   const onConfigChange = vi.fn();
-  const onDownloadPDF = vi.fn();
+  const onDownload = vi.fn();
   const onPrint = vi.fn();
   const props = {
     onConfigChange,
-    onDownloadPDF,
+    onDownload,
     onPrint,
     hasQuizzes: false,
     ...overrides,
   };
   const utils = render(<ConfigPanel {...props} />);
-  return { ...utils, onConfigChange, onDownloadPDF, onPrint };
+  return { ...utils, onConfigChange, onDownload, onPrint };
 }
 
 describe('ConfigPanel', () => {
@@ -82,11 +82,12 @@ describe('ConfigPanel', () => {
     expect(btn.disabled).toBe(true);
   });
 
-  it('calls onDownloadPDF when download button is clicked', () => {
-    const { onDownloadPDF } = setup({ hasQuizzes: true });
+  it('calls onDownload when download button is clicked', () => {
+    const { onDownload } = setup({ hasQuizzes: true });
     fireEvent.click(screen.getByTestId('check-a'));
     fireEvent.click(screen.getByTestId('download-btn'));
-    expect(onDownloadPDF).toHaveBeenCalledTimes(1);
+    expect(onDownload).toHaveBeenCalledTimes(1);
+    expect(onDownload).toHaveBeenCalledWith('pdf');
   });
 
   it('shows error for invalid quiz count', () => {

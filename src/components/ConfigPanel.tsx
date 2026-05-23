@@ -6,9 +6,11 @@ import { QUIZ_TYPE_LABELS } from '../types';
 
 const ALL_QUIZ_TYPES: QuizType[] = ['direct', 'fillBlank', 'vertical'];
 
+export type DownloadFormat = 'pdf' | 'word';
+
 export interface ConfigPanelProps {
   onConfigChange: (config: QuizConfig) => void;
-  onDownloadPDF: () => void;
+  onDownload: (format: DownloadFormat) => void;
   onPrint: () => void;
   hasQuizzes: boolean;
 }
@@ -19,7 +21,7 @@ interface LevelState {
   countError: string;  // validation error
 }
 
-export default function ConfigPanel({ onConfigChange, onDownloadPDF, onPrint, hasQuizzes }: ConfigPanelProps) {
+export default function ConfigPanel({ onConfigChange, onDownload, onPrint, hasQuizzes }: ConfigPanelProps) {
   const [levels, setLevels] = useState<Record<DifficultyLevel, LevelState>>(() => {
     const init = {} as Record<DifficultyLevel, LevelState>;
     for (const l of ALL_LEVELS) {
@@ -31,6 +33,7 @@ export default function ConfigPanel({ onConfigChange, onDownloadPDF, onPrint, ha
   const [copyCountStr, setCopyCountStr] = useState('1');
   const [copyCountError, setCopyCountError] = useState('');
   const [selectedTypes, setSelectedTypes] = useState<QuizType[]>(['direct']);
+  const [downloadFormat, setDownloadFormat] = useState<DownloadFormat>('pdf');
 
   const buildAndNotify = useCallback(
     (nextLevels: Record<DifficultyLevel, LevelState>, nextCopyStr: string, types?: QuizType[]) => {
@@ -190,8 +193,31 @@ export default function ConfigPanel({ onConfigChange, onDownloadPDF, onPrint, ha
       </div>
 
       <div style={styles.downloadSection}>
+        <div style={styles.formatRow}>
+          <span style={styles.formatLabel}>格式：</span>
+          <label style={styles.formatOption}>
+            <input
+              type="radio"
+              name="format"
+              checked={downloadFormat === 'pdf'}
+              onChange={() => setDownloadFormat('pdf')}
+              data-testid="format-pdf"
+            />
+            <span style={styles.levelText}>PDF</span>
+          </label>
+          <label style={styles.formatOption}>
+            <input
+              type="radio"
+              name="format"
+              checked={downloadFormat === 'word'}
+              onChange={() => setDownloadFormat('word')}
+              data-testid="format-word"
+            />
+            <span style={styles.levelText}>Word</span>
+          </label>
+        </div>
         <button
-          onClick={onDownloadPDF}
+          onClick={() => onDownload(downloadFormat)}
           disabled={downloadDisabled}
           style={{
             ...styles.downloadBtn,
@@ -199,7 +225,7 @@ export default function ConfigPanel({ onConfigChange, onDownloadPDF, onPrint, ha
           }}
           data-testid="download-btn"
         >
-          下载PDF
+          下载{downloadFormat === 'pdf' ? 'PDF' : 'Word'}
         </button>
         <button
           onClick={onPrint}
@@ -308,6 +334,22 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: 'column',
     alignItems: 'flex-start',
     gap: 6,
+  },
+  formatRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    fontSize: 13,
+  },
+  formatLabel: {
+    fontSize: 13,
+    fontWeight: 500,
+  },
+  formatOption: {
+    display: 'flex',
+    alignItems: 'center',
+    cursor: 'pointer',
+    gap: 4,
   },
   downloadBtn: {
     padding: '8px 20px',
