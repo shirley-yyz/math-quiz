@@ -4,17 +4,18 @@ import type { Quiz } from '../../types';
 
 describe('difficulty-rules', () => {
   // 验证 ALL_LEVELS 包含所有18个级别且按字母排序
-  it('ALL_LEVELS contains all 26 levels in order', () => {
+  it('ALL_LEVELS contains all 28 levels in order', () => {
     expect(ALL_LEVELS).toEqual([
       'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
       'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
       's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+      'aa', 'ab',
     ]);
-    expect(ALL_LEVELS.length).toBe(26);
+    expect(ALL_LEVELS.length).toBe(28);
   });
 
-  // 验证 difficultyRules 包含所有26个级别
-  it('difficultyRules has entries for all 26 levels', () => {
+  // 验证 difficultyRules 包含所有28个级别
+  it('difficultyRules has entries for all 28 levels', () => {
     for (const level of ALL_LEVELS) {
       expect(difficultyRules[level]).toBeDefined();
       expect(difficultyRules[level].level).toBe(level);

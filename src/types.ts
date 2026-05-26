@@ -2,13 +2,14 @@
  * 口算出题系统 - 核心类型定义
  */
 
-/** 难度级别：a-z 共26个阶梯 */
+/** 难度级别：a-z + aa, ab 共28个阶梯 */
 export type DifficultyLevel =
   | 'a' | 'b' | 'c' | 'd' | 'e' | 'f'
   | 'g' | 'h' | 'i' | 'j' | 'k' | 'l'
   | 'm' | 'n' | 'o' | 'p' | 'q' | 'r'
   | 's' | 't' | 'u' | 'v' | 'w' | 'x'
-  | 'y' | 'z';
+  | 'y' | 'z'
+  | 'aa' | 'ab';
 
 /** 运算符 */
 export type Operator = '+' | '-';
